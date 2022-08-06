@@ -2,6 +2,7 @@ from pydantic import BaseModel
 
 
 class EducationalLevelBase(BaseModel):
+    id: int | None
     title: str
     code: str
 
@@ -10,6 +11,7 @@ class EducationalLevelBase(BaseModel):
 
 
 class GroupBase(BaseModel):
+    id: int | None
     title: str
     level_id: int
 

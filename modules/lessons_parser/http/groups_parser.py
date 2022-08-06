@@ -2,10 +2,13 @@ from typing import Dict, List
 
 import requests
 from bs4 import BeautifulSoup
+from core.dependencies import get_db
 from core.models import EducationalLevel, Group
+from core.schemas.group import CreateEducationalLevelSchema, CreateGroupSchema
 from core.service.group import (create_educational_level, create_group,
                                 get_educational_level_by_title,
                                 get_group_by_title)
+from fastapi import Depends
 from modules.lessons_parser.http.base import BaseHttpParser, Counter
 
 
@@ -37,7 +40,13 @@ class AllGroupsParser(BaseHttpParser):
         assert code, "code can't be None"
         level = get_educational_level_by_title(title)
         if not level:
-            level = create_educational_level(title=title, code=code)
+            level = create_educational_level(
+                db=Depends(get_db),
+                level=CreateEducationalLevelSchema(
+                    title=title,
+                    code=code,
+                )
+            )
             self.level_counter.append_created()
             return level
         self.level_counter.append_updated()
@@ -50,7 +59,13 @@ class AllGroupsParser(BaseHttpParser):
             title = self.get_title(group)
             group = get_group_by_title(title)
             if not group:
-                group = create_group(title=title, level=level)
+                group = create_group(
+                    db=Depends(get_db),
+                    group=CreateGroupSchema(
+                        title=title,
+                        level=level,
+                    )
+                )
                 self.groups_counter.append_created()
                 result.append(group)
                 continue

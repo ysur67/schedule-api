@@ -1,8 +1,7 @@
 from typing import Optional
 
 from core.models import EducationalLevel, Group
-from core.structure.group import (CreateEducationalLevelSchema,
-                                  CreateGroupSchema)
+from core.schemas.group import CreateEducationalLevelSchema, CreateGroupSchema
 from sqlalchemy.orm import Session
 
 
