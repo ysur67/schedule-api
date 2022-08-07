@@ -41,9 +41,10 @@ class BaseHttpParser(BaseParser):
         cls: Type[T],
         url: str,
         request_type: RequestType = RequestType.POST,
-        payload_data: Dict = {}
+        payload_data: Dict = {},
+        **kwargs,
     ) -> T:
-        parser = cls(url, payload_data)
+        parser = cls(url, payload_data, **kwargs)
         parser.request_type = request_type
         parser.set_up()
         return parser

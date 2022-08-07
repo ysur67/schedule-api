@@ -10,16 +10,18 @@ from core.service.group import (create_educational_level, create_group,
                                 get_group_by_title)
 from fastapi import Depends
 from modules.lessons_parser.http.base import BaseHttpParser, Counter
+from sqlalchemy.orm import Session
 
 
 class AllGroupsParser(BaseHttpParser):
     BASE_URL = "http://inet.ibi.spb.ru/raspisan/menu.php"
     logging_name = "All Groups"
 
-    def __init__(self, url: str, payload_data: Dict) -> None:
+    def __init__(self, url: str, payload_data: Dict, db: Session) -> None:
         super().__init__(url, payload_data)
         self.level_counter = Counter(name='educational levels')
         self.groups_counter = Counter(name='groups')
+        self.db = db
 
     def parse(self):
         select = self.soup.find(id="ucstep")
@@ -38,10 +40,13 @@ class AllGroupsParser(BaseHttpParser):
         title = self.get_title(item)
         code = item.attrs.get("value", None)
         assert code, "code can't be None"
-        level = get_educational_level_by_title(title)
+        level = get_educational_level_by_title(
+            db=self.db,
+            title=title
+        )
         if not level:
             level = create_educational_level(
-                db=Depends(get_db),
+                db=self.db,
                 level=CreateEducationalLevelSchema(
                     title=title,
                     code=code,
@@ -57,10 +62,10 @@ class AllGroupsParser(BaseHttpParser):
         result = []
         for group in groups_soup.find_all("option"):
             title = self.get_title(group)
-            group = get_group_by_title(title)
+            group = get_group_by_title(db=self.db, title=title)
             if not group:
                 group = create_group(
-                    db=Depends(get_db),
+                    db=self.db,
                     group=CreateGroupSchema(
                         title=title,
                         level=level,
