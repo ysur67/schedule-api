@@ -63,7 +63,7 @@ class GroupsParser(BaseHttpParser):
             title = self.get_title(group)
             group = await get_group_by_title(db=self.db, title=title)
             if not group:
-                group = create_group(
+                group = await create_group(
                     db=self.db,
                     group=CreateGroupSchema(
                         title=title,
