@@ -13,7 +13,7 @@ from modules.lessons_parser.http.base import BaseHttpParser, Counter
 from sqlalchemy.orm import Session
 
 
-class AllGroupsParser(BaseHttpParser):
+class GroupsParser(BaseHttpParser):
     BASE_URL = "http://inet.ibi.spb.ru/raspisan/menu.php"
     logging_name = "All Groups"
 

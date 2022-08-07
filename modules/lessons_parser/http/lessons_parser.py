@@ -6,18 +6,21 @@ from core.database import Base
 from core.dependencies import get_db
 from core.models import Classroom, Group, Lesson, Subject, Teacher
 from core.schemas.classroom import CreateClassroomSchema
+from core.schemas.group import CreateGroupSchema
 from core.schemas.lesson import CreateLessonSchema, GetLessonSchema
 from core.schemas.subject import CreateSubjectSchema
 from core.schemas.teacher import CreateTeacherSchema
 from core.service.classroom import create_classroom, get_classroom_by_name
 from core.service.group import create_group, get_group_by_title
-from core.service.lesson import create_lesson, get_lesson_by_params
+from core.service.lesson import (create_lesson, get_lesson_by_params,
+                                 update_lesson)
 from core.service.subject import create_subject, get_subject_by_title
 from core.service.teacher import create_teacher, get_teacher_by_name
 from fastapi import Depends
 from modules.lessons_parser.utils import (get_date_from_string,
                                           get_time_range_from_string,
                                           get_url_from_string)
+from sqlalchemy.orm import Session
 
 from .base import BaseHttpParser, Counter
 
@@ -25,8 +28,9 @@ from .base import BaseHttpParser, Counter
 class LessonsParser(BaseHttpParser):
     logging_name: str = "Main Site Parser"
 
-    def __init__(self, url: str, payload_data: Dict) -> None:
+    def __init__(self, url: str, payload_data: Dict, db: Session) -> None:
         super().__init__(url, payload_data)
+        self.db = db
         self.lessons_counter = Counter(name='lessons')
         self.groups_counter = Counter(name='groups')
         self.classrooms_counter = Counter(name='classrooms')
@@ -41,6 +45,7 @@ class LessonsParser(BaseHttpParser):
 
     def parse(self):
         date_titles: List[BeautifulSoup] = self.soup.find_all("h4")
+        print(date_titles)
         for title in date_titles:
             parent_center = title.parent
             table = parent_center.next_sibling
@@ -129,13 +134,18 @@ class LessonsParser(BaseHttpParser):
         # 112, 1-И
         # Поэтому необходимо делить строку по запятой
         for title in groups_titles.split(","):
-            group_obj = get_group_by_title(title)
+            group_obj = get_group_by_title(db=self.db, title=title)
             if group_obj:
                 self.groups_counter.append_updated()
                 self.log_operation(group_obj, "найдена")
                 result.append(group_obj)
                 continue
-            group_obj = create_group(title=title)
+            group_obj = create_group(
+                db=self.db,
+                group=CreateGroupSchema(
+                    title=title,
+                )
+            )
             self.groups_counter.append_created()
             self.log_operation(group_obj, "создана")
             result.append(group_obj)
@@ -146,14 +156,15 @@ class LessonsParser(BaseHttpParser):
         if not title:
             return self.logger.error("У записи не имеется аудитории!")
         result = get_classroom_by_name(
-            db=Depends(get_db),
+            db=self.db,
+            title=title
         )
         if result:
             self.classrooms_counter.append_updated()
             self.log_operation(result, "найдена")
             return result
         result = create_classroom(
-            db=Depends(get_db),
+            db=self.db,
             classroom=CreateClassroomSchema(title=title)
         )
         self.classrooms_counter.append_created()
@@ -169,7 +180,7 @@ class LessonsParser(BaseHttpParser):
             title = title.replace(href, '')
             title = title.strip()
         result = get_subject_by_title(
-            db=Depends(get_db),
+            db=self.db,
             title=title
         )
         if result:
@@ -177,7 +188,7 @@ class LessonsParser(BaseHttpParser):
             self.subject_counter.append_updated()
             return result, href
         result = create_subject(
-            db=Depends(get_db),
+            db=self.db,
             subject=CreateSubjectSchema(
                 title=title,
             )
@@ -195,7 +206,7 @@ class LessonsParser(BaseHttpParser):
             )
             title = "NO DATA"
         result = get_teacher_by_name(
-            db=Depends(get_db),
+            db=self.db,
             name=title
         )
         if result:
@@ -203,7 +214,7 @@ class LessonsParser(BaseHttpParser):
             self.teachers_counter.append_updated()
             return result
         result = create_teacher(
-            db=Depends(get_db),
+            db=self.db,
             teacher=CreateTeacherSchema(name=title)
         )
         self.teachers_counter.append_created()
@@ -226,7 +237,7 @@ class LessonsParser(BaseHttpParser):
         href: str = None
     ) -> Lesson:
         lesson = get_lesson_by_params(
-            db=Depends(get_db),
+            db=self.db,
             param=GetLessonSchema(
                 group=group,
                 time_start=time_start,
@@ -238,12 +249,12 @@ class LessonsParser(BaseHttpParser):
         )
         if lesson:
             lesson.href = href
-            lesson.save()
+            lesson = update_lesson(db=self.db, lesson=lesson)
             self.log_operation(lesson, "обновлена")
             self.lessons_counter.append_updated()
             return lesson
         lesson = create_lesson(
-            db=Depends(get_db),
+            db=self.db,
             lesson=CreateLessonSchema(
                 title=subject.title,
                 date=lesson_date,

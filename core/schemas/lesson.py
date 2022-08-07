@@ -1,5 +1,9 @@
 from datetime import date, time
 
+from core.models.classroom import Classroom
+from core.models.group import Group
+from core.models.subject import Subject
+from core.models.teacher import Teacher
 from core.schemas.classroom import BaseClassroom
 from core.schemas.group import GroupBase
 from core.schemas.subject import BaseSubject
@@ -20,10 +24,24 @@ class BaseLesson(BaseModel):
     note: str | None
     href: str | None
 
+    class Config:
+        orm_mode = True
 
-class GetLessonSchema(BaseLesson):
-    pass
+
+class GetLessonSchema(BaseModel):
+    group: GroupBase
+    teacher: BaseTeacher
+    classroom: BaseClassroom | None
+    subject: BaseSubject | None
+    date: date
+    time_start: time
 
 
 class CreateLessonSchema(BaseLesson):
-    pass
+    group: Group
+    teacher: Teacher
+    classroom:  Classroom | None
+    subject: Subject | None
+
+    class Config:
+        arbitrary_types_allowed = True

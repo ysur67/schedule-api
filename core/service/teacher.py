@@ -11,7 +11,7 @@ def get_teacher_by_name(db: Session, name: str) -> Optional[Teacher]:
 
 def create_teacher(db: Session, teacher: CreateTeacherSchema) -> Teacher:
     result = Teacher(
-        teacher=teacher.name
+        name=teacher.name
     )
     db.add(result)
     db.commit()

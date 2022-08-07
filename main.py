@@ -1,9 +1,7 @@
 from fastapi import Depends, FastAPI
 from sqlalchemy.orm import Session
 
-from core.dependencies import DatabaseContextManager, get_db
-from modules.lessons_parser.http.base import RequestType
-from modules.lessons_parser.http.groups_parser import AllGroupsParser
+from core.dependencies import get_db
 
 app = FastAPI()
 
