@@ -6,13 +6,13 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
-async def get_subject_by_title(db: AsyncSession, title: str) -> Coroutine[Optional[Subject]]:
+async def get_subject_by_title(db: AsyncSession, title: str) -> Optional[Subject]:
     query = select(Subject).where(Subject.title == title)
     result = await db.execute(query)
-    return result.fetchone()
+    return result.scalar_one()
 
 
-async def create_subject(db: AsyncSession, subject: CreateSubjectSchema) -> Coroutine[Subject]:
+async def create_subject(db: AsyncSession, subject: CreateSubjectSchema) -> Subject:
     result = Subject(
         title=subject.title
     )

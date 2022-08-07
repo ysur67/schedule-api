@@ -6,13 +6,13 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
-async def get_teacher_by_name(db: AsyncSession, name: str) -> Coroutine[Optional[Teacher]]:
+async def get_teacher_by_name(db: AsyncSession, name: str) -> Optional[Teacher]:
     query = select(Teacher).where(Teacher.name == name)
     result = await db.execute(query)
-    return result.fetchone()
+    return result.scalar_one()
 
 
-async def create_teacher(db: AsyncSession, teacher: CreateTeacherSchema) -> Coroutine[Teacher]:
+async def create_teacher(db: AsyncSession, teacher: CreateTeacherSchema) -> Teacher:
     result = Teacher(
         name=teacher.name
     )

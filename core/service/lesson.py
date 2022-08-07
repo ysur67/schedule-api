@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 async def get_lesson_by_params(
     db: AsyncSession,
     param: GetLessonSchema
-) -> Coroutine[Optional[Lesson]]:
+) -> Optional[Lesson]:
     query = select(Lesson).where(
         Lesson.group_id == param.group.id,
         Lesson.teacher_id == param.teacher.id,
@@ -25,10 +25,10 @@ async def get_lesson_by_params(
     else:
         query = query.where(Lesson.subject_id == None)
     result = await db.execute(query)
-    return result.fetchone()
+    return result.scalar_one()
 
 
-async def create_lesson(db: AsyncSession, lesson: CreateLessonSchema) -> Coroutine[Lesson]:
+async def create_lesson(db: AsyncSession, lesson: CreateLessonSchema) -> Lesson:
     result = Lesson(
         title=lesson.subject.title,
         date=lesson.date,
@@ -47,7 +47,7 @@ async def create_lesson(db: AsyncSession, lesson: CreateLessonSchema) -> Corouti
     return result
 
 
-async def update_lesson(db: AsyncSession, lesson: Lesson) -> Coroutine[Lesson]:
+async def update_lesson(db: AsyncSession, lesson: Lesson) -> Lesson:
     await db.commit()
     await db.refresh(lesson)
     return lesson

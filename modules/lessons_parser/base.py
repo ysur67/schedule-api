@@ -15,7 +15,7 @@ class BaseParser(ABC):
     logging_name: str
 
     @classmethod
-    def build_parser(cls: Type[T], url: str) -> T:
+    async def build_parser(cls: Type[T], url: str) -> T:
         """Фабричный метод парсеров."""
         parser = cls(url)
         parser.set_up()
@@ -24,11 +24,11 @@ class BaseParser(ABC):
     def __init__(self, url: str) -> None:
         self.url = url
 
-    def set_up(self):
+    async def set_up(self):
         self._set_up_logger()
-        self.on_set_up()
+        await self.on_set_up()
 
-    def on_set_up(self):
+    async def on_set_up(self):
         """Дополнительный метод настройки, который будет вызван сразу после
         основной настройки парсера.
 
@@ -38,7 +38,7 @@ class BaseParser(ABC):
         pass
 
     @abstractmethod
-    def parse(self):
+    async def parse(self):
         pass
 
     def _set_up_logger(self):

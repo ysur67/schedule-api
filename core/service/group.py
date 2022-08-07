@@ -1,4 +1,4 @@
-from typing import Coroutine, Optional
+from typing import Optional
 
 from core.models import EducationalLevel, Group
 from core.schemas.group import CreateEducationalLevelSchema, CreateGroupSchema
@@ -9,22 +9,22 @@ from sqlalchemy.ext.asyncio import AsyncSession
 async def get_educational_level_by_title(
     db: AsyncSession,
     title: str
-) -> Coroutine[Optional[EducationalLevel]]:
+) -> Optional[EducationalLevel]:
     query = select(EducationalLevel).where(EducationalLevel.title == title)
     result = await db.execute(query)
-    return result.fetchone()
+    return result.scalar_one()
 
 
-async def get_group_by_title(db: AsyncSession, title: str) -> Coroutine[Optional[Group]]:
+async def get_group_by_title(db: AsyncSession, title: str) -> Optional[Group]:
     query = select(Group).where(Group.title == title)
     result = await db.execute(query)
-    return result.fetchone()
+    return result.scalar_one()
 
 
 async def create_educational_level(
     db: AsyncSession,
     level: CreateEducationalLevelSchema
-) -> Coroutine[EducationalLevel]:
+) -> EducationalLevel:
     result = EducationalLevel(
         title=level.title,
         code=level.code
