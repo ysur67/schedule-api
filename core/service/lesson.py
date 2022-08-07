@@ -25,6 +25,7 @@ def get_lesson_by_params(db: Session, param: GetLessonSchema) -> Optional[Lesson
 
 def create_lesson(db: Session, lesson: CreateLessonSchema) -> Lesson:
     result = Lesson(
+        title=lesson.subject.title,
         date=lesson.date,
         time_start=lesson.time_start,
         time_end=lesson.time_end,
