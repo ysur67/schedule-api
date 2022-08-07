@@ -1,29 +1,34 @@
-from typing import Optional
+from typing import Coroutine, Optional
 
-from core.models import Lesson, classroom
-from core.schemas.lesson import BaseLesson, CreateLessonSchema, GetLessonSchema
-from sqlalchemy.orm import Session
+from core.models import Lesson
+from core.schemas.lesson import CreateLessonSchema, GetLessonSchema
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
-def get_lesson_by_params(db: Session, param: GetLessonSchema) -> Optional[Lesson]:
-    query = db.query(Lesson).filter(
+async def get_lesson_by_params(
+    db: AsyncSession,
+    param: GetLessonSchema
+) -> Coroutine[Optional[Lesson]]:
+    query = select(Lesson).where(
         Lesson.group_id == param.group.id,
         Lesson.teacher_id == param.teacher.id,
         Lesson.time_start == param.time_start,
         Lesson.date == param.date,
     )
     if param.classroom is not None:
-        query = query.filter(Lesson.classroom_id == param.classroom.id)
+        query = query.where(Lesson.classroom_id == param.classroom.id)
     else:
-        query = query.filter(Lesson.classroom_id == None)
+        query = query.where(Lesson.classroom_id == None)
     if param.subject is not None:
-        query = query.filter(Lesson.subject_id == param.subject.id)
+        query = query.where(Lesson.subject_id == param.subject.id)
     else:
-        query = query.filter(Lesson.subject_id == None)
-    return query.first()
+        query = query.where(Lesson.subject_id == None)
+    result = await db.execute(query)
+    return result.fetchone()
 
 
-def create_lesson(db: Session, lesson: CreateLessonSchema) -> Lesson:
+async def create_lesson(db: AsyncSession, lesson: CreateLessonSchema) -> Coroutine[Lesson]:
     result = Lesson(
         title=lesson.subject.title,
         date=lesson.date,
@@ -37,12 +42,12 @@ def create_lesson(db: Session, lesson: CreateLessonSchema) -> Lesson:
         teacher=lesson.teacher
     )
     db.add(result)
-    db.commit()
-    db.refresh(result)
+    await db.commit()
+    await db.refresh(result)
     return result
 
 
-def update_lesson(db: Session, lesson: Lesson) -> Lesson:
-    db.commit()
-    db.refresh(lesson)
+async def update_lesson(db: AsyncSession, lesson: Lesson) -> Coroutine[Lesson]:
+    await db.commit()
+    await db.refresh(lesson)
     return lesson
