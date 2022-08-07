@@ -1,5 +1,5 @@
 from core.models.mixins import IsActiveMixin, TitleMixin
-from sqlalchemy import Column, Date, Integer, String, Text, Time
+from sqlalchemy import Column, Date, ForeignKey, Integer, String, Text, Time
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
@@ -17,11 +17,18 @@ class Lesson(TitleMixin, IsActiveMixin):
         Time,
         server_default=func.current_timestamp(type_=Time)
     )
-    group_id = Column(Integer, nullable=False)
-    teacher_id = Column(Integer, nullable=False)
+    group_id = Column(
+        Integer,
+        ForeignKey("group.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    teacher_id = Column(Integer, ForeignKey(
+        "teacher.id", ondelete="CASCADE"), nullable=False)
     note = Column(Text)
-    classroom_id = Column(Integer)
-    subject_id = Column(Integer, nullable=False)
+    classroom_id = Column(Integer, ForeignKey(
+        "classroom.id", ondelete="CASCADE"),)
+    subject_id = Column(Integer, ForeignKey(
+        "subject.id", ondelete="CASCADE"), nullable=False)
     href = Column(String)
 
     group = relationship("Group", back_populates="lessons")

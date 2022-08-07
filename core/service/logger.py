@@ -13,4 +13,4 @@ def get_default_logger(name: Optional[str] = None) -> logging.Logger:
     )
     logger.addHandler(handler)
     logger.propagate = False
-    return
+    return logger

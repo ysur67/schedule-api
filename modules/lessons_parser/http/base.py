@@ -37,22 +37,23 @@ class BaseHttpParser(BaseParser):
     request_type: RequestType
 
     @classmethod
-    def build_parser(
+    async def build_parser(
         cls: Type[T],
         url: str,
         request_type: RequestType = RequestType.POST,
-        payload_data: Dict = {}
+        payload_data: Dict = {},
+        **kwargs,
     ) -> T:
-        parser = cls(url, payload_data)
+        parser = cls(url, payload_data, **kwargs)
         parser.request_type = request_type
-        parser.set_up()
+        await parser.set_up()
         return parser
 
     def __init__(self, url: str, payload_data: Dict) -> None:
         super().__init__(url)
         self.payload_data = payload_data
 
-    def on_set_up(self):
+    async def on_set_up(self):
         if self.request_type == RequestType.POST:
             request = requests.post(self.url, data=self.payload_data)
         elif self.request_type == RequestType.GET:

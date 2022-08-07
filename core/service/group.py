@@ -2,22 +2,27 @@ from typing import Optional
 
 from core.models import EducationalLevel, Group
 from core.schemas.group import CreateEducationalLevelSchema, CreateGroupSchema
-from sqlalchemy.orm import Session
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
-def get_educational_level_by_title(
-    db: Session,
+async def get_educational_level_by_title(
+    db: AsyncSession,
     title: str
 ) -> Optional[EducationalLevel]:
-    return db.query(EducationalLevel).filter(EducationalLevel.title == title).first()
+    query = select(EducationalLevel).where(EducationalLevel.title == title)
+    result = await db.execute(query)
+    return result.scalar()
 
 
-def get_group_by_title(db: Session, title: str) -> Optional[Group]:
-    return db.query(Group).filter(Group.title == title).first()
+async def get_group_by_title(db: AsyncSession, title: str) -> Optional[Group]:
+    query = select(Group).where(Group.title == title)
+    result = await db.execute(query)
+    return result.scalar()
 
 
-def create_educational_level(
-    db: Session,
+async def create_educational_level(
+    db: AsyncSession,
     level: CreateEducationalLevelSchema
 ) -> EducationalLevel:
     result = EducationalLevel(
@@ -25,13 +30,13 @@ def create_educational_level(
         code=level.code
     )
     db.add(result)
-    db.commit()
-    db.refresh(result)
+    await db.commit()
+    await db.refresh(result)
     return result
 
 
-def create_group(
-    db: Session,
+async def create_group(
+    db: AsyncSession,
     group: CreateGroupSchema,
 ) -> Group:
     result = Group(
@@ -39,6 +44,6 @@ def create_group(
         level=group.level,
     )
     db.add(result)
-    db.commit()
-    db.refresh(result)
+    await db.commit()
+    await db.refresh(result)
     return result
