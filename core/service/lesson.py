@@ -25,7 +25,7 @@ async def get_lesson_by_params(
     else:
         query = query.where(Lesson.subject_id == None)
     result = await db.execute(query)
-    return result.scalar_one()
+    return result.scalar()
 
 
 async def create_lesson(db: AsyncSession, lesson: CreateLessonSchema) -> Lesson:

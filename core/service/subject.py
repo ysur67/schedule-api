@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 async def get_subject_by_title(db: AsyncSession, title: str) -> Optional[Subject]:
     query = select(Subject).where(Subject.title == title)
     result = await db.execute(query)
-    return result.scalar_one()
+    return result.scalar()
 
 
 async def create_subject(db: AsyncSession, subject: CreateSubjectSchema) -> Subject:

@@ -12,13 +12,13 @@ async def get_educational_level_by_title(
 ) -> Optional[EducationalLevel]:
     query = select(EducationalLevel).where(EducationalLevel.title == title)
     result = await db.execute(query)
-    return result.scalar_one()
+    return result.scalar()
 
 
 async def get_group_by_title(db: AsyncSession, title: str) -> Optional[Group]:
     query = select(Group).where(Group.title == title)
     result = await db.execute(query)
-    return result.scalar_one()
+    return result.scalar()
 
 
 async def create_educational_level(
