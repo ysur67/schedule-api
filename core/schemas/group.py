@@ -7,6 +7,8 @@ class EducationalLevelBase(BaseModel):
     title: str
     code: str
 
+
+class EducationalLevel(EducationalLevelBase):
     class Config:
         orm_mode = True
 
@@ -15,6 +17,8 @@ class GroupBase(BaseModel):
     id: int | None
     title: str
 
+
+class Group(GroupBase):
     class Config:
         orm_mode = True
 

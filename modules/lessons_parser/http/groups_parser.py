@@ -26,7 +26,6 @@ class GroupsParser(BaseHttpParser):
         assert select, "select can't be None"
         for option in select.find_all("option"):
             level = await self.parse_level(option)
-            print(level)
             groups = await self.parse_groups(level)
         self.logger.info('Groups created: %d', self.groups_counter.created)
         self.logger.info('Groups updated: %d', self.groups_counter.updated)
