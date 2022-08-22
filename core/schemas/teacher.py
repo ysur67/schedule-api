@@ -5,8 +5,12 @@ class BaseTeacher(BaseModel):
     id: int | None
     name: str
 
-    class Config:
+
+
+class Teacher(BaseModel):
+     class Config:
         orm_mode = True
+
 
 
 class CreateTeacherSchema(BaseTeacher):

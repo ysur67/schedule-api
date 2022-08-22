@@ -4,10 +4,15 @@ from sqlalchemy.orm import Session
 
 from core.dependencies import get_db
 from routers.group import router as group_router
+from routers.teacher import router as teacher_router
 
 app = FastAPI()
 app.include_router(
     group_router,
+    prefix="/api/v1"
+)
+app.include_router(
+    teacher_router,
     prefix="/api/v1"
 )
 
