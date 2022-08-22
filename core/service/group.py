@@ -15,6 +15,15 @@ async def get_educational_level_by_title(
     return result.scalar()
 
 
+async def get_educational_level_by_id(
+    db: AsyncSession,
+    id_: int,
+) -> Optional[EducationalLevel]:
+    query = select(EducationalLevel).where(EducationalLevel.id == id_)
+    result = await db.execute(query)
+    return result.scalar()
+
+
 async def get_all_educational_levels(
     db: AsyncSession,
 ) -> Iterable[EducationalLevel]:
