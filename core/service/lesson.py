@@ -1,9 +1,11 @@
-from typing import Coroutine, Optional
+from datetime import date
+from typing import Optional
 
 from core.models import Lesson
 from core.schemas.lesson import CreateLessonSchema, GetLessonSchema
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import joinedload
 
 
 async def get_lesson_by_params(
@@ -26,6 +28,19 @@ async def get_lesson_by_params(
         query = query.where(Lesson.subject_id == None)
     result = await db.execute(query)
     return result.scalar()
+
+
+async def get_lessons(db: AsyncSession, date: date = None):
+    query = select(Lesson).options(
+        joinedload(Lesson.group),
+        joinedload(Lesson.classroom),
+        joinedload(Lesson.teacher),
+        joinedload(Lesson.subject),
+    )
+    if date is not None:
+        query = query.where(Lesson.date == date)
+    result = await db.execute(query)
+    return result.scalars()
 
 
 async def create_lesson(db: AsyncSession, lesson: CreateLessonSchema) -> Lesson:

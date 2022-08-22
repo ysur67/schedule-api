@@ -3,16 +3,21 @@ from fastapi import Depends, FastAPI
 from sqlalchemy.orm import Session
 
 from core.dependencies import get_db
-from routers.group import router as group_router
-from routers.teacher import router as teacher_router
+from routers.group import router as groups_router
+from routers.lesson import router as lessons_router
+from routers.teacher import router as teachers_router
 
 app = FastAPI()
 app.include_router(
-    group_router,
+    groups_router,
     prefix="/api/v1"
 )
 app.include_router(
-    teacher_router,
+    teachers_router,
+    prefix="/api/v1"
+)
+app.include_router(
+    lessons_router,
     prefix="/api/v1"
 )
 
