@@ -1,5 +1,5 @@
 from datetime import date
-from typing import Optional
+from typing import Any, Iterable, Optional
 
 from core.models import Lesson
 from core.schemas.lesson import CreateLessonSchema, GetLessonSchema
@@ -30,17 +30,39 @@ async def get_lesson_by_params(
     return result.scalar()
 
 
+async def get_lesson_by_id(db: AsyncSession, id_: int) -> Optional[Lesson]:
+    query = _get_lessons_query(db).where(Lesson.id == id_)
+    result = await db.execute(query)
+    return result.scalar()
+
+
 async def get_lessons(db: AsyncSession, date: date = None):
-    query = select(Lesson).options(
+    query = _get_lessons_query(db)
+    if date is not None:
+        query = query.where(Lesson.date == date)
+    result = await db.execute(query)
+    return result.scalars()
+
+
+async def get_lessons_by_date_range(
+    db: AsyncSession,
+    date_start: date,
+    date_end: date
+) -> Iterable[Lesson]:
+    query = _get_lessons_query(db)
+    query = query.where(Lesson.date >= date_start)
+    query = query.where(Lesson.date <= date_end)
+    result = await db.execute(query)
+    return result.scalars()
+
+
+def _get_lessons_query(db: AsyncSession) -> Any:
+    return select(Lesson).options(
         joinedload(Lesson.group),
         joinedload(Lesson.classroom),
         joinedload(Lesson.teacher),
         joinedload(Lesson.subject),
     )
-    if date is not None:
-        query = query.where(Lesson.date == date)
-    result = await db.execute(query)
-    return result.scalars()
 
 
 async def create_lesson(db: AsyncSession, lesson: CreateLessonSchema) -> Lesson:
