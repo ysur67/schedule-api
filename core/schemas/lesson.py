@@ -1,4 +1,5 @@
 from datetime import date, time
+from typing import Iterable
 
 from core.models.classroom import Classroom
 from core.models.group import Group
@@ -28,6 +29,14 @@ class BaseLesson(BaseModel):
 
 
 class Lesson(BaseLesson):
+    class Config:
+        orm_mode = True
+
+
+class LessonsWithGroupSchema(BaseModel):
+    groups: list[GroupSchema]
+    lessons: list[Lesson]
+
     class Config:
         orm_mode = True
 

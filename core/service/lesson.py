@@ -2,6 +2,7 @@ from datetime import date
 from typing import Any, Iterable, Optional
 
 from core.models import Lesson
+from core.models.group import Group
 from core.schemas.lesson import CreateLessonSchema, GetLessonSchema
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -40,6 +41,13 @@ async def get_lessons(db: AsyncSession, date: date = None):
     query = _get_lessons_query(db)
     if date is not None:
         query = query.where(Lesson.date == date)
+    result = await db.execute(query)
+    return result.scalars()
+
+
+async def get_groups_from_lessons(db: AsyncSession, lessons: Iterable[Lesson]) -> Iterable[Group]:
+    group_ids = list(map(lambda el: el.group_id, lessons))
+    query = select(Group).where(Group.id.in_(group_ids)).distinct(Group.title)
     result = await db.execute(query)
     return result.scalars()
 
