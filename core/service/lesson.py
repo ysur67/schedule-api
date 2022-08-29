@@ -1,12 +1,13 @@
 from datetime import date
-from typing import Any, Iterable, Optional
+from typing import Any, Dict, Iterable, Optional
 
 from core.models import Lesson
 from core.models.group import Group
 from core.schemas.lesson import CreateLessonSchema, GetLessonSchema
+from core.schemas.utils import Range
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import aliased, joinedload
 
 
 async def get_lesson_by_params(
@@ -37,10 +38,16 @@ async def get_lesson_by_id(db: AsyncSession, id_: int) -> Optional[Lesson]:
     return result.scalar()
 
 
-async def get_lessons(db: AsyncSession, date: date = None):
+async def get_lessons(
+    db: AsyncSession,
+    date: Optional[date] = None,
+    group_id: Optional[int] = None
+) -> Iterable[Lesson]:
     query = _get_lessons_query(db)
     if date is not None:
         query = query.where(Lesson.date == date)
+    if group_id is not None:
+        query = query.where(Lesson.group_id == group_id)
     result = await db.execute(query)
     return result.scalars()
 
@@ -48,6 +55,14 @@ async def get_lessons(db: AsyncSession, date: date = None):
 async def get_groups_from_lessons(db: AsyncSession, lessons: Iterable[Lesson]) -> Iterable[Group]:
     group_ids = list(map(lambda el: el.group_id, lessons))
     query = select(Group).where(Group.id.in_(group_ids)).distinct(Group.title)
+    result = await db.execute(query)
+    return result.scalars()
+
+
+async def get_groups_by_date(db: AsyncSession, date_: date) -> Iterable[Group]:
+    query = select(Group).join(Lesson)
+    # Lessons = aliased(Lesson)
+    query = query.where(Lesson.date == date_).distinct(Group.id)
     result = await db.execute(query)
     return result.scalars()
 

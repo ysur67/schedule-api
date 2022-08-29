@@ -11,6 +11,7 @@ from routers.teacher import router as teachers_router
 app = FastAPI()
 origins = [
     "http://localhost:3000",
+    "http://localhost:4321",
     "http://172.31.157.168:3000",
     "http://192.168.0.104:3000"
 ]
