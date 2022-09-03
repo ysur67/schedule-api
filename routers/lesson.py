@@ -21,31 +21,12 @@ async def get_lessons_view(
     group_id: Optional[int] = None,
     db: AsyncSession = Depends(get_db)
 ):
-    print(group_id)
     return await get_lessons(db, date=date, group_id=group_id)
 
 
 @router.get("/lessons/{id}/", response_model=Lesson)
 async def get_lesson_by_id_view(id: int, db: AsyncSession = Depends(get_db)):
     return await get_lesson_by_id(db, id_=id)
-
-
-# TODO: ref
-@router.get("/lessons-by-date-range/", response_model=Dict[date, LessonsWithGroupSchema])
-async def get_lessons_by_date_range_view(
-    date_start: date,
-    date_end: date,
-    db: AsyncSession = Depends(get_db),
-):
-    result: Dict[date, LessonsWithGroupSchema] = {}
-    for date_ in date_range(date_start, date_end):
-        lessons = list(await get_lessons(db, date_))
-        groups = list(await get_groups_from_lessons(db, lessons))
-        result[date_] = LessonsWithGroupSchema(
-            lessons=lessons,
-            groups=groups
-        )
-    return result
 
 
 @router.get("/groups-by-date-range/", response_model=Dict[date, Iterable[Group]])
