@@ -1,12 +1,21 @@
+from functools import lru_cache
+
 import uvicorn
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 
 from core.dependencies import get_db
+from core.settings import Settings
 from routers.group import router as groups_router
 from routers.lesson import router as lessons_router
 from routers.teacher import router as teachers_router
+
+
+@lru_cache()
+def get_settings() -> Settings:
+    return Settings()
+
 
 app = FastAPI()
 origins = [
