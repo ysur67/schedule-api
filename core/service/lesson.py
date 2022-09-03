@@ -1,9 +1,13 @@
-from typing import Coroutine, Optional
+from datetime import date
+from typing import Any, Dict, Iterable, Optional
 
 from core.models import Lesson
+from core.models.group import Group
 from core.schemas.lesson import CreateLessonSchema, GetLessonSchema
+from core.schemas.utils import Range
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import aliased, joinedload
 
 
 async def get_lesson_by_params(
@@ -26,6 +30,62 @@ async def get_lesson_by_params(
         query = query.where(Lesson.subject_id == None)
     result = await db.execute(query)
     return result.scalar()
+
+
+async def get_lesson_by_id(db: AsyncSession, id_: int) -> Optional[Lesson]:
+    query = _get_lessons_query(db).where(Lesson.id == id_)
+    result = await db.execute(query)
+    return result.scalar()
+
+
+async def get_lessons(
+    db: AsyncSession,
+    date: Optional[date] = None,
+    group_id: Optional[int] = None
+) -> Iterable[Lesson]:
+    query = _get_lessons_query(db)
+    if date is not None:
+        query = query.where(Lesson.date == date)
+    if group_id is not None:
+        query = query.where(Lesson.group_id == group_id)
+    result = await db.execute(query)
+    return result.scalars()
+
+
+async def get_groups_from_lessons(db: AsyncSession, lessons: Iterable[Lesson]) -> Iterable[Group]:
+    group_ids = list(map(lambda el: el.group_id, lessons))
+    query = select(Group).where(Group.id.in_(group_ids)).distinct(Group.title)
+    result = await db.execute(query)
+    return result.scalars()
+
+
+async def get_groups_by_date(db: AsyncSession, date_: date) -> Iterable[Group]:
+    query = select(Group).join(Lesson)
+    # Lessons = aliased(Lesson)
+    query = query.where(Lesson.date == date_).distinct(Group.id)
+    result = await db.execute(query)
+    return result.scalars()
+
+
+async def get_lessons_by_date_range(
+    db: AsyncSession,
+    date_start: date,
+    date_end: date
+) -> Iterable[Lesson]:
+    query = _get_lessons_query(db)
+    query = query.where(Lesson.date >= date_start)
+    query = query.where(Lesson.date <= date_end)
+    result = await db.execute(query)
+    return result.scalars()
+
+
+def _get_lessons_query(db: AsyncSession) -> Any:
+    return select(Lesson).options(
+        joinedload(Lesson.group),
+        joinedload(Lesson.classroom),
+        joinedload(Lesson.teacher),
+        joinedload(Lesson.subject),
+    )
 
 
 async def create_lesson(db: AsyncSession, lesson: CreateLessonSchema) -> Lesson:
