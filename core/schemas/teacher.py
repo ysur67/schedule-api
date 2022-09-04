@@ -6,11 +6,9 @@ class BaseTeacher(BaseModel):
     name: str
 
 
-
-class Teacher(BaseModel):
-     class Config:
+class Teacher(BaseTeacher):
+    class Config:
         orm_mode = True
-
 
 
 class CreateTeacherSchema(BaseTeacher):

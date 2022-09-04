@@ -1,3 +1,5 @@
+from functools import lru_cache
+
 import uvicorn
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware

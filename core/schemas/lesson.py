@@ -42,8 +42,8 @@ class LessonsWithGroupSchema(BaseModel):
 
 
 class GetLessonSchema(BaseModel):
-    group: GroupBase
-    teacher: BaseTeacher
+    group: GroupSchema
+    teacher: TeacherSchema
     classroom: BaseClassroom | None
     subject: BaseSubject | None
     date: date

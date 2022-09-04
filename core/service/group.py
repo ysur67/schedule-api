@@ -72,8 +72,9 @@ async def create_group(
 ) -> Group:
     result = Group(
         title=group.title,
-        level=group.level,
     )
+    if group.level is not None:
+        result.level_id = group.level.id
     db.add(result)
     await db.commit()
     await db.refresh(result)

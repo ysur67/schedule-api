@@ -26,3 +26,9 @@ archive.zip
 
 *.db
 logs
+
+.env
+docker-compose.yml
+docker-compose.*.yml
+!docker-compose.template.yml
+celerybeat-schedule
