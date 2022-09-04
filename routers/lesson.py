@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, timedelta
 from typing import Dict, Iterable, Optional
 
 from core.dependencies import get_db
@@ -35,4 +35,4 @@ async def get_groups_by_date_range_view(
     date_end: date,
     db: AsyncSession = Depends(get_db)
 ):
-    return {elem: await get_groups_by_date(db, elem) for elem in date_range(date_start, date_end)}
+    return {elem: await get_groups_by_date(db, elem) for elem in date_range(date_start, date_end + timedelta(days=1))}
