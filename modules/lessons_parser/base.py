@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 from datetime import datetime
 from typing import Type, TypeVar
 
+from core.dependencies import get_settings
 from core.service.logger import get_default_logger
 from core.settings import Settings
 
@@ -43,7 +44,8 @@ class BaseParser(ABC):
 
     def _set_up_logger(self):
         self.logger = get_default_logger(__name__)
-        file_name = Settings.LOGGING_DIR / self._build_logging_filename()
+        settings = get_settings()
+        file_name = settings.LOGGING_DIR / self._build_logging_filename()
         file_handler = logging.FileHandler(str(file_name))
         self.logger.addHandler(file_handler)
         file_handler.setFormatter(logging.Formatter(

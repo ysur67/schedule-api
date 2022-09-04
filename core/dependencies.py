@@ -9,3 +9,8 @@ from core.settings import Settings
 async def get_db() -> AsyncSession:
     async with async_session() as session:
         yield session
+
+
+@lru_cache()
+def get_settings() -> Settings:
+    return Settings()
