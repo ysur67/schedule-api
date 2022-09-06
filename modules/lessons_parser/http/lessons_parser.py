@@ -22,7 +22,7 @@ from modules.lessons_parser.utils import (get_date_from_string,
                                           get_url_from_string)
 from sqlalchemy.orm import Session
 
-from .base import BaseHttpParser, Counter
+from .http_base import BaseHttpParser, Counter
 
 
 class LessonsParser(BaseHttpParser):

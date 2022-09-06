@@ -3,7 +3,7 @@ import os
 from logging.config import fileConfig
 
 from core.database import Base
-from core.models import (Classroom, EducationalLevel, Group, Lesson, Subject,
+from core.models import (Classroom, EducationalLevelSchema, Group, Lesson, Subject,
                          Teacher)
 from sqlalchemy import engine_from_config, pool
 from sqlalchemy.ext.asyncio.engine import async_engine_from_config
@@ -17,7 +17,7 @@ config = context.config
 config.set_section_option(
     config.config_ini_section,
     "sqlalchemy.url",
-    os.getenv("DATABASE_URL")
+    os.getenv("DATABASE_URL") or ""
 )
 
 # Interpret the config file for Python logging.
