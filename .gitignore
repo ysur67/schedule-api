@@ -32,3 +32,5 @@ docker-compose.yml
 docker-compose.*.yml
 !docker-compose.template.yml
 celerybeat-schedule
+
+.dmypy.json
