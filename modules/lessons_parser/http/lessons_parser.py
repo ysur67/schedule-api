@@ -81,9 +81,9 @@ class LessonsParser(BaseHttpParser):
     async def get_lessons_from_rows(self, rows: BeautifulSoup, lesson_date: date) -> List[Lesson]:
         result = []
         for row in rows:
-            lesson = await self.get_lessons_from_single_row(row, lesson_date)
-            if lesson:
-                result.append(lesson)
+            lessons = await self.get_lessons_from_single_row(row, lesson_date)
+            if lessons:
+                result.append(lessons)
         return result
 
     async def get_lessons_from_single_row(self, row: BeautifulSoup, lesson_date: date) -> List[Lesson]:
@@ -109,7 +109,7 @@ class LessonsParser(BaseHttpParser):
             elif index == 5:
                 note = await self.parse_note(cell)
         if subject is None:
-            return None
+            return []
         result = []
         for group in groups:
             lesson = await self.parse_lesson(
@@ -232,7 +232,7 @@ class LessonsParser(BaseHttpParser):
         classroom: Classroom,
         subject: Subject,
         teacher: Teacher,
-        note: str,
+        note: str | None,
         href: str = None
     ) -> Lesson:
         lesson = await get_lesson_by_params(

@@ -4,8 +4,7 @@ from typing import Dict, Optional, Type, TypeVar
 
 import requests
 from bs4 import BeautifulSoup
-
-from ..base import BaseParser
+from modules.lessons_parser.base import BaseParser
 
 T = TypeVar("T", bound="BaseHttpParser")
 
