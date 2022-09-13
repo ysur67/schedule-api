@@ -70,7 +70,7 @@ def _get_lessons_query(db: AsyncSession) -> Any:
 
 async def create_lesson(db: AsyncSession, lesson: CreateLessonSchema) -> Lesson:
     result = Lesson(
-        title=lesson.subject.title,
+        title=lesson.subject.title if lesson.subject is not None else "",
         date=lesson.date,
         time_start=lesson.time_start,
         time_end=lesson.time_end,

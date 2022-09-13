@@ -83,7 +83,7 @@ class LessonsParser(BaseHttpParser):
         for row in rows:
             lessons = await self.get_lessons_from_single_row(row, lesson_date)
             if lessons:
-                result.append(lessons)
+                result += lessons
         return result
 
     async def get_lessons_from_single_row(self, row: BeautifulSoup, lesson_date: date) -> List[Lesson]:
@@ -170,7 +170,7 @@ class LessonsParser(BaseHttpParser):
         self.log_operation(result, "создана")
         return result
 
-    async def parse_subject(self, subject: BeautifulSoup) -> 'tuple[Subject, Optional[str]]':
+    async def parse_subject(self, subject: BeautifulSoup) -> tuple[Subject | None, str | None]:
         title = self.get_title(subject, raise_exception=False)
         if title is None:
             return None, None
@@ -231,7 +231,7 @@ class LessonsParser(BaseHttpParser):
         time_end: time,
         classroom: Classroom,
         subject: Subject,
-        teacher: Teacher,
+        teacher: Teacher | None,
         note: str | None,
         href: str = None
     ) -> Lesson:
