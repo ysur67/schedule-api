@@ -4,9 +4,8 @@ from typing import Dict, Iterable, Optional
 from core.dependencies import get_db
 from core.schemas.group import Group
 from core.schemas.lesson import Lesson, LessonsWithGroupSchema
-from core.service.lesson import (get_groups_by_date, get_groups_from_lessons,
-                                 get_lesson_by_id, get_lessons,
-                                 get_lessons_by_date_range)
+from core.service.lesson import (get_groups_by_date, get_lesson_by_id,
+                                 get_lessons)
 from fastapi import Depends
 from fastapi.routing import APIRouter
 from sqlalchemy.ext.asyncio import AsyncSession

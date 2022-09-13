@@ -52,29 +52,9 @@ async def get_lessons(
     return result.scalars()
 
 
-async def get_groups_from_lessons(db: AsyncSession, lessons: Iterable[Lesson]) -> Iterable[Group]:
-    group_ids = list(map(lambda el: el.group_id, lessons))
-    query = select(Group).where(Group.id.in_(group_ids)).distinct(Group.title)
-    result = await db.execute(query)
-    return result.scalars()
-
-
 async def get_groups_by_date(db: AsyncSession, date_: date) -> Iterable[Group]:
     query = select(Group).join(Lesson)
-    # Lessons = aliased(Lesson)
     query = query.where(Lesson.date == date_).distinct(Group.id)
-    result = await db.execute(query)
-    return result.scalars()
-
-
-async def get_lessons_by_date_range(
-    db: AsyncSession,
-    date_start: date,
-    date_end: date
-) -> Iterable[Lesson]:
-    query = _get_lessons_query(db)
-    query = query.where(Lesson.date >= date_start)
-    query = query.where(Lesson.date <= date_end)
     result = await db.execute(query)
     return result.scalars()
 
