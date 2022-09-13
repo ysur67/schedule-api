@@ -1,23 +1,27 @@
 
 
-from abc import ABC
+from abc import ABC, abstractmethod
 
 from core.schemas.lesson import CreateLessonSchema, GetLessonSchema, Lesson
 
 
 class LessonsRepository(ABC):
 
+    @abstractmethod
     async def get_lesson_by_query(
         self,
         query: GetLessonSchema
     ) -> Lesson | None:
         pass
 
-    async def get_lesson_by_title(self, title: str) -> Lesson | None:
+    @abstractmethod
+    async def get_lesson_by_id(self, id: int) -> Lesson | None:
         pass
 
+    @abstractmethod
     async def get_all_lessons(self) -> list[Lesson]:
         pass
 
+    @abstractmethod
     async def create_lesson(self, lesson: CreateLessonSchema) -> Lesson:
         pass
