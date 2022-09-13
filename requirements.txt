@@ -40,6 +40,8 @@ lazy-object-proxy==1.7.1
 Mako==1.2.1
 MarkupSafe==2.1.1
 mccabe==0.7.0
+mypy==0.971
+mypy-extensions==0.4.3
 orjson==3.7.11
 packaging==21.3
 pendulum==2.1.2
@@ -70,6 +72,8 @@ toml==0.10.2
 tomli==2.0.1
 tomlkit==0.11.1
 tortoise-orm==0.19.2
+types-requests==2.28.9
+types-urllib3==1.26.23
 typing_extensions==4.3.0
 ujson==5.4.0
 urllib3==1.26.11

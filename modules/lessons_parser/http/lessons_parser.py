@@ -37,13 +37,13 @@ class LessonsParser(BaseHttpParser):
         self.subject_counter = Counter(name='subjects')
         self.teachers_counter = Counter(name='teachers')
 
-    async def on_set_up(self):
+    async def on_set_up(self) -> None:
         await super().on_set_up()
         self.logger.info("Начинается парсинг занятий...")
         self.logger.info("Полученный адрес: %s", self.url)
         self.logger.info("Поля запроса: %s", self.payload_data)
 
-    async def parse(self):
+    async def parse(self) -> None:
         date_titles: List[BeautifulSoup] = self.soup.find_all("h4")
         for title in date_titles:
             parent_center = title.parent

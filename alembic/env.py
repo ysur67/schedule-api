@@ -1,11 +1,10 @@
 import asyncio
 import os
 from logging.config import fileConfig
+from typing import Any
 
 from core.database import Base
-from core.models import (Classroom, EducationalLevelSchema, Group, Lesson, Subject,
-                         Teacher)
-from sqlalchemy import engine_from_config, pool
+from sqlalchemy import pool
 from sqlalchemy.ext.asyncio.engine import async_engine_from_config
 
 from alembic import context
@@ -61,14 +60,14 @@ def run_migrations_offline() -> None:
         context.run_migrations()
 
 
-def do_run_migrations(connection):
+def do_run_migrations(connection: Any) -> None:
     context.configure(connection=connection, target_metadata=target_metadata)
 
     with context.begin_transaction():
         context.run_migrations()
 
 
-async def run_migrations_online():
+async def run_migrations_online() -> None:
     """Run migrations in 'online' mode.
 
     In this scenario we need to create an Engine

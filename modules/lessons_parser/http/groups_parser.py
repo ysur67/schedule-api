@@ -2,7 +2,7 @@ from typing import Dict, List
 
 import requests
 from bs4 import BeautifulSoup
-from core.models import EducationalLevelSchema, Group
+from core.models import EducationalLevel, Group
 from core.schemas.group import CreateEducationalLevelSchema, CreateGroupSchema
 from core.service.group import (create_educational_level, create_group,
                                 get_educational_level_by_title,
@@ -21,7 +21,7 @@ class GroupsParser(BaseHttpParser):
         self.groups_counter = Counter(name='groups')
         self.db = db
 
-    async def parse(self):
+    async def parse(self) -> None:
         select = self.soup.find(id="ucstep")
         assert select, "select can't be None"
         for option in select.find_all("option"):
@@ -34,7 +34,7 @@ class GroupsParser(BaseHttpParser):
         self.logger.info('Educational levels updated: %d',
                          self.level_counter.updated)
 
-    async def parse_level(self, item: BeautifulSoup) -> EducationalLevelSchema:
+    async def parse_level(self, item: BeautifulSoup) -> EducationalLevel:
         title = self.get_title(item)
         code = item.attrs.get("value", None)
         assert code, "code can't be None"
@@ -55,7 +55,7 @@ class GroupsParser(BaseHttpParser):
         self.level_counter.append_updated()
         return level
 
-    async def parse_groups(self, level: EducationalLevelSchema) -> List[Group]:
+    async def parse_groups(self, level: EducationalLevel) -> List[Group]:
         groups_soup = await self.get_groups_by_request(level)
         result = []
         for group in groups_soup.find_all("option"):
@@ -76,7 +76,7 @@ class GroupsParser(BaseHttpParser):
             result.append(group)
         return result
 
-    async def get_groups_by_request(self, level: EducationalLevelSchema) -> BeautifulSoup:
+    async def get_groups_by_request(self, level: EducationalLevel) -> BeautifulSoup:
         url = self.BASE_URL + f"?tmenu={12}&cod={level.code}"
         response = requests.get(url)
         return BeautifulSoup(response.text, "html.parser")

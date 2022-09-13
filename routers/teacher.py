@@ -11,5 +11,5 @@ router = APIRouter()
 
 
 @router.get("/teachers/", response_model=Iterable[Teacher])
-async def get_all_teacher_view(db: AsyncSession = Depends(get_db)):
+async def get_all_teacher_view(db: AsyncSession = Depends(get_db)) -> Iterable[Teacher]:
     return await get_all_teachers(db)
