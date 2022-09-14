@@ -25,3 +25,7 @@ class LessonsRepository(ABC):
     @abstractmethod
     async def create_lesson(self, lesson: CreateLessonSchema) -> Lesson:
         pass
+
+    @abstractmethod
+    async def update_lesson(self, lesson: Lesson) -> Lesson:
+        pass
