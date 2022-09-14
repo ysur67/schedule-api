@@ -8,7 +8,7 @@ from modules.lessons_parser.http.lessons_parser import LessonsParser
 from utils.date_time import to_message_format
 
 
-def init_tasks(celery: Celery):
+def init_tasks(celery: Celery) -> None:
 
     @celery.task(name="parse_lessons")
     def parse_lessons() -> None:

@@ -11,7 +11,7 @@ def has_init_tasks_method(module: ModuleType) -> bool:
     return hasattr(module, "init_tasks") and callable(module.init_tasks)
 
 
-def init_tasks(app: Celery):
+def init_tasks(app: Celery) -> None:
     package = celery_app.tasks
     prefix = package.__name__ + "."
     for _, name, _ in iter_modules(package.__path__, prefix):

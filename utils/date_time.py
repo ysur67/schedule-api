@@ -1,5 +1,6 @@
 from datetime import date, time, timedelta
 from functools import singledispatch
+from typing import Generator
 
 
 @singledispatch
@@ -17,6 +18,6 @@ def _(data: time) -> str:
     return data.strftime("%H:%M")
 
 
-def date_range(start_date: date, end_date: date):
+def date_range(start_date: date, end_date: date) -> Generator[date, None, None]:
     for n in range(int((end_date - start_date).days)):
         yield start_date + timedelta(n)

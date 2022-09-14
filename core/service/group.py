@@ -52,6 +52,12 @@ async def get_group_by_title(db: AsyncSession, title: str) -> Optional[Group]:
     return result.scalar()
 
 
+async def get_group_by_id(db: AsyncSession, id: int) -> Group | None:
+    query = select(Group).where(Group.id == id)
+    result = await db.execute(query)
+    return result.scalar()
+
+
 async def create_educational_level(
     db: AsyncSession,
     level: CreateEducationalLevelSchema

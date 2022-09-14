@@ -8,7 +8,7 @@ class EducationalLevelBase(BaseModel):
     code: str
 
 
-class EducationalLevel(EducationalLevelBase):
+class EducationalLevelSchema(EducationalLevelBase):
     class Config:
         orm_mode = True
 

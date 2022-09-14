@@ -1,0 +1,6 @@
+from .classrooms_repository import ClassroomsRepository
+from .educational_levels_repository import EducationalLevelsRepository
+from .groups_repository import GroupsRepository
+from .lessons_repository import LessonsRepository
+from .subjects_repository import SubjectsRepository
+from .teachers_repository import TeachersRepository

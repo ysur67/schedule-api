@@ -1,49 +1,60 @@
-from datetime import date, datetime, time
+from datetime import date, time
 from typing import Dict, List, Optional
 
 from bs4 import BeautifulSoup
 from core.database import Base
-from core.dependencies import get_db
-from core.models import Classroom, Group, Lesson, Subject, Teacher
-from core.schemas.classroom import CreateClassroomSchema
-from core.schemas.group import CreateGroupSchema
-from core.schemas.lesson import CreateLessonSchema, GetLessonSchema
-from core.schemas.subject import CreateSubjectSchema
-from core.schemas.teacher import CreateTeacherSchema
-from core.service.classroom import create_classroom, get_classroom_by_name
-from core.service.group import create_group, get_group_by_title
-from core.service.lesson import (create_lesson, get_lesson_by_params,
-                                 update_lesson)
-from core.service.subject import create_subject, get_subject_by_title
-from core.service.teacher import create_teacher, get_teacher_by_name
-from fastapi import Depends
+from core.di.container import Container
+from core.repositories import GroupsRepository
+from core.repositories.classrooms_repository import ClassroomsRepository
+from core.repositories.lessons_repository import LessonsRepository
+from core.repositories.subjects_repository import SubjectsRepository
+from core.repositories.teachers_repository import TeachersRepository
+from core.schemas.classroom import Classroom, CreateClassroomSchema
+from core.schemas.group import CreateGroupSchema, Group
+from core.schemas.lesson import CreateLessonSchema, GetLessonSchema, Lesson
+from core.schemas.subject import CreateSubjectSchema, Subject
+from core.schemas.teacher import CreateTeacherSchema, Teacher
+from dependency_injector.wiring import Provide, inject
 from modules.lessons_parser.utils import (get_date_from_string,
                                           get_time_range_from_string,
                                           get_url_from_string)
-from sqlalchemy.orm import Session
 
-from .base import BaseHttpParser, Counter
+from .http_base import BaseHttpParser, Counter
 
 
 class LessonsParser(BaseHttpParser):
     logging_name: str = "Main Site Parser"
 
-    def __init__(self, url: str, payload_data: Dict, db: Session) -> None:
+    @inject
+    def __init__(
+        self,
+        url: str,
+        payload_data: Dict,
+        groups_repository: GroupsRepository = Provide[Container.groups_repository],
+        classrooms_repository: ClassroomsRepository = Provide[Container.classrooms_repository],
+        subjects_repository: SubjectsRepository = Provide[Container.subjects_repository],
+        teachers_repository: TeachersRepository = Provide[Container.teachers_repository],
+        lessons_repository: LessonsRepository = Provide[Container.lessons_repository],
+    ) -> None:
         super().__init__(url, payload_data)
-        self.db = db
+        self._groups_repository = groups_repository
+        self._classrooms_repository = classrooms_repository
+        self._subjects_repository = subjects_repository
+        self._teachers_repository = teachers_repository
+        self._lessons_repository = lessons_repository
         self.lessons_counter = Counter(name='lessons')
         self.groups_counter = Counter(name='groups')
         self.classrooms_counter = Counter(name='classrooms')
         self.subject_counter = Counter(name='subjects')
         self.teachers_counter = Counter(name='teachers')
 
-    async def on_set_up(self):
+    async def on_set_up(self) -> None:
         await super().on_set_up()
         self.logger.info("Начинается парсинг занятий...")
         self.logger.info("Полученный адрес: %s", self.url)
         self.logger.info("Поля запроса: %s", self.payload_data)
 
-    async def parse(self):
+    async def parse(self) -> None:
         date_titles: List[BeautifulSoup] = self.soup.find_all("h4")
         for title in date_titles:
             parent_center = title.parent
@@ -81,9 +92,9 @@ class LessonsParser(BaseHttpParser):
     async def get_lessons_from_rows(self, rows: BeautifulSoup, lesson_date: date) -> List[Lesson]:
         result = []
         for row in rows:
-            lesson = await self.get_lessons_from_single_row(row, lesson_date)
-            if lesson:
-                result.append(lesson)
+            lessons = await self.get_lessons_from_single_row(row, lesson_date)
+            if lessons:
+                result += lessons
         return result
 
     async def get_lessons_from_single_row(self, row: BeautifulSoup, lesson_date: date) -> List[Lesson]:
@@ -109,7 +120,7 @@ class LessonsParser(BaseHttpParser):
             elif index == 5:
                 note = await self.parse_note(cell)
         if subject is None:
-            return None
+            return []
         result = []
         for group in groups:
             lesson = await self.parse_lesson(
@@ -133,44 +144,45 @@ class LessonsParser(BaseHttpParser):
         # 112, 1-И
         # Поэтому необходимо делить строку по запятой
         for title in groups_titles.split(","):
-            group_obj = await get_group_by_title(db=self.db, title=title)
-            if group_obj:
-                self.groups_counter.append_updated()
-                self.log_operation(group_obj, "найдена")
-                result.append(group_obj)
-                continue
-            group_obj = await create_group(
-                db=self.db,
-                group=CreateGroupSchema(
-                    title=title,
-                )
-            )
-            self.groups_counter.append_created()
-            self.log_operation(group_obj, "создана")
-            result.append(group_obj)
+            result.append(await self._update_or_create_group(title))
         return result
+
+    async def _update_or_create_group(self, title: str) -> Group:
+        group_obj = await self._groups_repository.get_group_by_title(
+            title=title
+        )
+        if group_obj:
+            self.groups_counter.append_updated()
+            self.log_operation(group_obj, "найдена")
+            return group_obj
+        group_obj = await self._groups_repository.create_group(
+            group=CreateGroupSchema(
+                title=title,
+            )
+        )
+        self.groups_counter.append_created()
+        self.log_operation(group_obj, "создана")
+        return group_obj
 
     async def parse_classroom(self, classroom: BeautifulSoup) -> Classroom:
         title = self.get_title(classroom, raise_exception=False)
         if not title:
             return self.logger.error("У записи не имеется аудитории!")
-        result = await get_classroom_by_name(
-            db=self.db,
+        result = await self._classrooms_repository.get_classroom_by_name(
             title=title
         )
         if result:
             self.classrooms_counter.append_updated()
             self.log_operation(result, "найдена")
             return result
-        result = await create_classroom(
-            db=self.db,
+        result = await self._classrooms_repository.create_classroom(
             classroom=CreateClassroomSchema(title=title)
         )
         self.classrooms_counter.append_created()
         self.log_operation(result, "создана")
         return result
 
-    async def parse_subject(self, subject: BeautifulSoup) -> 'tuple[Subject, Optional[str]]':
+    async def parse_subject(self, subject: BeautifulSoup) -> tuple[Subject | None, str | None]:
         title = self.get_title(subject, raise_exception=False)
         if title is None:
             return None, None
@@ -178,16 +190,14 @@ class LessonsParser(BaseHttpParser):
         if href is not None:
             title = title.replace(href, '')
             title = title.strip()
-        result = await get_subject_by_title(
-            db=self.db,
+        result = await self._subjects_repository.get_subject_by_title(
             title=title
         )
         if result:
             self.log_operation(result, "обновлена")
             self.subject_counter.append_updated()
             return result, href
-        result = await create_subject(
-            db=self.db,
+        result = await self._subjects_repository.create_subject(
             subject=CreateSubjectSchema(
                 title=title,
             )
@@ -204,16 +214,14 @@ class LessonsParser(BaseHttpParser):
                 teacher
             )
             title = "NO DATA"
-        result = await get_teacher_by_name(
-            db=self.db,
+        result = await self._teachers_repository.get_teacher_by_name(
             name=title
         )
         if result:
             self.log_operation(result, "найдена")
             self.teachers_counter.append_updated()
             return result
-        result = await create_teacher(
-            db=self.db,
+        result = await self._teachers_repository.create_teacher(
             teacher=CreateTeacherSchema(name=title)
         )
         self.teachers_counter.append_created()
@@ -231,13 +239,12 @@ class LessonsParser(BaseHttpParser):
         time_end: time,
         classroom: Classroom,
         subject: Subject,
-        teacher: Teacher,
-        note: str,
+        teacher: Teacher | None,
+        note: str | None,
         href: str = None
     ) -> Lesson:
-        lesson = await get_lesson_by_params(
-            db=self.db,
-            param=GetLessonSchema(
+        lesson = await self._lessons_repository.get_lesson_by_query(
+            query=GetLessonSchema(
                 group=group,
                 time_start=time_start,
                 classroom=classroom,
@@ -248,12 +255,13 @@ class LessonsParser(BaseHttpParser):
         )
         if lesson:
             lesson.href = href
-            lesson = await update_lesson(db=self.db, lesson=lesson)
+            lesson = await self._lessons_repository.update_lesson(
+                lesson=lesson
+            )
             self.log_operation(lesson, "обновлена")
             self.lessons_counter.append_updated()
             return lesson
-        lesson = await create_lesson(
-            db=self.db,
+        lesson = await self._lessons_repository.create_lesson(
             lesson=CreateLessonSchema(
                 title=subject.title,
                 date=lesson_date,

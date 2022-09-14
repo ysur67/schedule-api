@@ -5,7 +5,7 @@ from typing import Optional, Tuple
 from bs4 import BeautifulSoup
 
 
-def get_time_range_from_string(string: str) -> Tuple[time, time]:
+def get_time_range_from_string(string: str) -> Tuple[time | None, time | None]:
     """Получить временной диапазон из строки.
 
     Обязательный формат строки, который используется на данный момент

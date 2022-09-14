@@ -1,19 +1,18 @@
 """Create base tables
 
 Revision ID: 002ce38fd102
-Revises: 
+Revises:
 Create Date: 2022-08-06 01:05:13.408906
 
 """
-from alembic import op
 import sqlalchemy as sa
-
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = '002ce38fd102'
-down_revision = None
-branch_labels = None
-depends_on = None
+down_revision: str | None = None
+branch_labels: str | None = None
+depends_on: str | None = None
 
 
 def upgrade() -> None:

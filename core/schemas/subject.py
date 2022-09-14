@@ -9,5 +9,11 @@ class BaseSubject(BaseModel):
         orm_mode = True
 
 
+class Subject(BaseSubject):
+
+    class Config:
+        orm_mode = True
+
+
 class CreateSubjectSchema(BaseSubject):
     pass

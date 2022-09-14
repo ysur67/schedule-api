@@ -2,11 +2,11 @@ from asgiref.sync import async_to_sync
 from celery import Celery
 from core.database import async_session
 from core.dependencies import get_db
-from modules.lessons_parser.http.base import RequestType
 from modules.lessons_parser.http.groups_parser import GroupsParser
+from modules.lessons_parser.http.http_base import RequestType
 
 
-def init_tasks(celery: Celery):
+def init_tasks(celery: Celery) -> None:
 
     @celery.task(name="parse_groups")
     def parse_groups() -> None:

@@ -8,6 +8,12 @@ class BaseClassroom(BaseModel):
     class Config:
         orm_mode = True
 
+class Classroom(BaseClassroom):
+
+    class Config:
+        orm_mode = True
+
+
 
 class CreateClassroomSchema(BaseClassroom):
     pass
