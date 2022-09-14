@@ -1,4 +1,3 @@
-import anyio
 import asyncclick as click
 import uvicorn
 

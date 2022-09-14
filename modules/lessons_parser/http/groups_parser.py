@@ -2,11 +2,13 @@ from typing import Dict, List
 
 import requests
 from bs4 import BeautifulSoup
-from core.models import EducationalLevel, Group
-from core.schemas.group import CreateEducationalLevelSchema, CreateGroupSchema
-from core.service.group import (create_educational_level, create_group,
-                                get_educational_level_by_title,
-                                get_group_by_title)
+from core.di.container import Container
+from core.repositories.educational_levels_repository import \
+    EducationalLevelsRepository
+from core.repositories.groups_repository import GroupsRepository
+from core.schemas.group import (CreateEducationalLevelSchema,
+                                CreateGroupSchema, EducationalLevel, Group)
+from dependency_injector.wiring import Provide, inject
 from modules.lessons_parser.http.http_base import BaseHttpParser, Counter
 from sqlalchemy.orm import Session
 
@@ -15,11 +17,21 @@ class GroupsParser(BaseHttpParser):
     BASE_URL = "http://inet.ibi.spb.ru/raspisan/menu.php"
     logging_name = "All Groups"
 
-    def __init__(self, url: str, payload_data: Dict, db: Session) -> None:
+    @inject
+    def __init__(
+        self,
+        url: str,
+        payload_data: Dict,
+        groups_repository: GroupsRepository = Provide[Container.groups_repository],
+        levels_repository: EducationalLevelsRepository = Provide[
+            Container.educational_levels_repository
+        ],
+    ) -> None:
         super().__init__(url, payload_data)
         self.level_counter = Counter(name='educational levels')
         self.groups_counter = Counter(name='groups')
-        self.db = db
+        self._groups_repository = groups_repository
+        self._levels_repository = levels_repository
 
     async def parse(self) -> None:
         select = self.soup.find(id="ucstep")
@@ -38,43 +50,46 @@ class GroupsParser(BaseHttpParser):
         title = self.get_title(item)
         code = item.attrs.get("value", None)
         assert code, "code can't be None"
-        level = await get_educational_level_by_title(
-            db=self.db,
+        level = await self._levels_repository.get_level_by_title(
             title=title
         )
-        if not level:
-            level = await create_educational_level(
-                db=self.db,
-                level=CreateEducationalLevelSchema(
-                    title=title,
-                    code=code,
-                )
-            )
-            self.level_counter.append_created()
+        if level is not None:
+            self.level_counter.append_updated()
             return level
-        self.level_counter.append_updated()
+        level = await self._levels_repository.create_level(
+            level=CreateEducationalLevelSchema(
+                title=title,
+                code=code,
+            )
+        )
+        self.level_counter.append_created()
         return level
 
     async def parse_groups(self, level: EducationalLevel) -> List[Group]:
         groups_soup = await self.get_groups_by_request(level)
         result = []
         for group in groups_soup.find_all("option"):
-            title = self.get_title(group)
-            group = await get_group_by_title(db=self.db, title=title)
-            if not group:
-                group = await create_group(
-                    db=self.db,
-                    group=CreateGroupSchema(
-                        title=title,
-                        level=level,
-                    )
-                )
-                self.groups_counter.append_created()
-                result.append(group)
-                continue
-            self.groups_counter.append_updated()
-            result.append(group)
+            result.append(await self._update_or_create_group(group, level))
         return result
+
+    async def _update_or_create_group(
+        self,
+        group_block: BeautifulSoup,
+        level: EducationalLevel
+    ) -> Group:
+        title = self.get_title(group_block)
+        group = await self._groups_repository.get_group_by_title(title=title)
+        if group is not None:
+            self.groups_counter.append_updated()
+            return group
+        created_group = await self._groups_repository.create_group(
+            group=CreateGroupSchema(
+                title=title,
+                level=level,
+            )
+        )
+        self.groups_counter.append_created()
+        return created_group
 
     async def get_groups_by_request(self, level: EducationalLevel) -> BeautifulSoup:
         url = self.BASE_URL + f"?tmenu={12}&cod={level.code}"

@@ -1,7 +1,5 @@
-import asyncio
-import os
+import sys
 
-import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -14,6 +12,7 @@ from routers.teacher import router as teachers_router
 async def create_app() -> FastAPI:
     app = FastAPI()
     container = Container()
+    container.wire(sys.modules[__name__])
     await container.init_resources()
     _ = await container.db_session()
     app.container = container
@@ -45,8 +44,3 @@ async def create_app() -> FastAPI:
         prefix="/api/v1"
     )
     return app
-
-
-async def main() -> None:
-    app = await create_app()
-    uvicorn.run(app, host="0.0.0.0", port=8000)
