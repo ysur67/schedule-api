@@ -1,45 +1,52 @@
-from functools import lru_cache
+import asyncio
+import os
 
 import uvicorn
-from fastapi import Depends, FastAPI
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy.orm import Session
 
-from core.dependencies import get_db
+from core.di.container import Container
 from routers.group import router as groups_router
 from routers.lesson import router as lessons_router
 from routers.teacher import router as teachers_router
 
-app = FastAPI()
-origins = [
-    "http://localhost:3000",
-    "http://localhost:4321",
-    "http://172.31.157.168:3000",
-    "http://192.168.0.104:3000"
-]
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+async def create_app() -> FastAPI:
+    app = FastAPI()
+    container = Container()
+    await container.init_resources()
+    _ = await container.db_session()
+    app.container = container
+    origins = [
+        "http://localhost:3000",
+        "http://localhost:4321",
+        "http://172.31.157.168:3000",
+        "http://192.168.0.104:3000"
+    ]
+
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=origins,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
+    app.include_router(
+        groups_router,
+        prefix="/api/v1"
+    )
+    app.include_router(
+        teachers_router,
+        prefix="/api/v1"
+    )
+    app.include_router(
+        lessons_router,
+        prefix="/api/v1"
+    )
+    return app
 
 
-app.include_router(
-    groups_router,
-    prefix="/api/v1"
-)
-app.include_router(
-    teachers_router,
-    prefix="/api/v1"
-)
-app.include_router(
-    lessons_router,
-    prefix="/api/v1"
-)
-
-
-if __name__ == "__main__":
+async def main() -> None:
+    app = await create_app()
     uvicorn.run(app, host="0.0.0.0", port=8000)
